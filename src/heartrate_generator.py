@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 import wfdb
-
+import os
 
 # parts of heart beat:
 # P = small Gaussian/sin bump
@@ -18,8 +18,10 @@ import wfdb
 # ST segment	0.1	              0.0	        Plateau (ventricular contraction)
 # T wave	    0.16	            +0.3	    Ventricular repolarization
 # TP segment	0.26	         0.0	        Heart at rest
+hr_config_path = os.path.join(os.path.dirname(__file__), "heartrate_config.json")
+ecg_data_path = os.path.join(os.path.dirname(__file__), "..", "data", "ECG_Data_P0000", "p00000_s00")
 
-with open("heartrate_config.json") as f:
+with open(hr_config_path) as f:
     config = json.load(f)
 
 dataset_type = config["type_of_data"] 
@@ -115,7 +117,7 @@ def generate_ecg(durations_json, bpm, fs, num_beats):
 
 def create_dataset(dataset_type, durations_json, bpm, fs, num_beats, open_source_time_s):
     if dataset_type == "open-source":
-        ecg = wfdb.rdrecord('ECG_Data_P0000/p00000_s00', sampfrom=0, sampto=250*open_source_time_s)
+        ecg = wfdb.rdrecord(ecg_data_path, sampfrom=0, sampto=250*open_source_time_s)
         ecg = ecg.p_signal.flatten()
     else:
         ecg = generate_ecg(durations_json, bpm, fs, num_beats)
