@@ -1,4 +1,7 @@
+
 {
+    "type_of_data": "open-source",
+    "open_source_time_s": 5,
     "bpm": 75,
     "sampling_hz": 250,
     "num_beats": 5,

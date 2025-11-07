@@ -1,7 +1,10 @@
+# updated to include provision to parse from prerecorded dataset (variables added into heartrate_config.json as well)
+
 import numpy as np
 import matplotlib.pyplot as plt
-
 import json
+import wfdb
+
 
 # parts of heart beat:
 # P = small Gaussian/sin bump
@@ -19,11 +22,14 @@ import json
 with open("heartrate_config.json") as f:
     config = json.load(f)
 
+dataset_type = config["type_of_data"] 
 bpm = config["bpm"]
 fs = config["sampling_hz"]
 num_beats = config["num_beats"]
 heartbeat_type = config["heartbeat_type"]
 durations_json = config["durations"]
+open_source_time_s = config["open_source_time_s"]
+print(open_source_time_s)
 
 gain = 100
 baseline = 1.5
@@ -68,6 +74,7 @@ def t_wave(n):
 # Flat segments
 def flat(n):
     return np.zeros(n)
+
 #Convert single float value to digital reading (amplify by 100x, turn to voltage, add to baseline, then convert to 12bit)
 def float_to_adc(ecg_value, gain = 100, vin = 0, vref = 3.3, baseline = 1.5, adc_max = 4095):
     amplified_mV = ecg_value * gain;  #e.g. 1.0 mV -> 100 mV
@@ -106,24 +113,16 @@ def generate_ecg(durations_json, bpm, fs, num_beats):
 # ecg_new = voltage_ADC(ecg)
 # print(ecg_new)
 
-def create_dataset(durations_json, bpm, fs, num_beats):
-    ecg = generate_ecg(durations_json, bpm, fs, num_beats)
+def create_dataset(dataset_type, durations_json, bpm, fs, num_beats, open_source_time_s):
+    if dataset_type == "open-source":
+        ecg = wfdb.rdrecord('ECG_Data_P0000/p00000_s00', sampfrom=0, sampto=250*open_source_time_s)
+        ecg = ecg.p_signal.flatten()
+    else:
+        ecg = generate_ecg(durations_json, bpm, fs, num_beats)
     ecg_digital = convert_to_digital(ecg)
     ecg_digital = np.array(ecg_digital)
     return ecg_digital
 
-ecg_digital = create_dataset(durations_json, bpm, fs, num_beats)
-
-plt.plot(ecg_digital, label="Python ECG")
-plt.legend()
-plt.show()
-# # --- Plot ---
-# time = np.linspace(0, beat_period, len(ecg))
-# plt.plot(time, ecg)
-# plt.title("Synthetic ECG - 75 BPM, 500 Hz Sampling")
-# plt.xlabel("Time (s)")
-# plt.ylabel("Amplitude (mV)")
-# plt.grid(True)
-# plt.show()
+ecg_digital = create_dataset(dataset_type, durations_json, bpm, fs, num_beats, open_source_time_s)
 
 
