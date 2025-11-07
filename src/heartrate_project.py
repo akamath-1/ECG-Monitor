@@ -1,8 +1,10 @@
 # This version of the code now does the following:
-# Real-time ECG streaming and visualization interface for MCU data.
-# Streams a generated ECG dataset to the MCU, decodes incoming binary packets, and plots them live using PyQtGraph.
-# Displays continuous ECG waveforms, timestamps, and sample counts in a responsive GUI.
-# Note: timestamps are artificially generated for now due to timing issues between host device and MCU. Will address this when testing signal generated with hardware. 
+# Receives, deconstructs, and graphs packets of data from MCU in real time.
+# Note 1: This data is being generated from a second ESP32 (code in esp32_signalgenerator.ino), 
+# and is streamed in 8-bit resolution (as opposed to 12-bit resolution, as the data being generated was before).
+# The code has been changed to support conversion of data streamed at 8-bit resolution accordingly - these changes 
+# will need to be reverted if/when using 12-bit resolution data in future development.
+# Note 2: The code now utilizes live time-stamps read from data packets to create data arrays for graphing. 
 
 import sys
 import serial
@@ -37,7 +39,7 @@ fs = 250
 num_beats = 2 #config["num_beats"]
 heartbeat_type = config["heartbeat_type"]
 durations_json = config["durations"]
-packet_size = 28
+packet_size = 18
 dataset_type = config["type_of_data"] 
 open_source_time_s = config["open_source_time_s"]
 received_samples = []
@@ -51,24 +53,14 @@ timestamps_plot = [] # NEW
 max_samples_plotted = int(fs * plot_window_s)
 data_lock = threading.Lock()  # NEW - Protect received_samples
 stop_flag = threading.Event()
-
+stop_flag.is_set()
 # NEW - PyQtGraph globals (will be initialized in main)
 plot_widget = None
 curve = None
 status_label = None
 
-# THREAD 1
-def stream(ecg_digital):
-    # Send a command to start streaming
-    ser.write(b'START\n')
-    time.sleep(0.1)
-    
-    for sample in ecg_digital:
-        # Convert sample to bytes (2 bytes for 12-bit ADC)
-        ser.write(int(sample).to_bytes(2, byteorder='little'))
-        time.sleep(1/fs)  # maintain 500 Hz
 
-# THREAD 2
+# THREAD 1
 def read_from_mcu(packet_size): #, expected_packet_num, timeout
     
     print("Listening for packets...\n")
@@ -76,11 +68,11 @@ def read_from_mcu(packet_size): #, expected_packet_num, timeout
     packet_count = 0
     last_packet_time = time.time()
     start_time = 0
-    while not stop_flag.is_set():
+    while not stop_flag.is_set(): #while stop != true, aka while "going"
         #add bytes from the serial port to the buffer array
         if ser.in_waiting > 0:
-            data = ser.read(ser.in_waiting)
-            buffer += data
+            data = ser.read(ser.in_waiting) #if bytes in the serial port, read them
+            buffer += data #add bytes to buffer
             last_packet_time = time.time()
         else: 
             if time.time() - last_packet_time > 2.0:
@@ -89,53 +81,71 @@ def read_from_mcu(packet_size): #, expected_packet_num, timeout
             # No full packet yet — give the CPU a tiny rest
             time.sleep(0.001)
         # Check how many bytes have arrived from the MCU
-        while len(buffer) >= packet_size:
+
+        while len(buffer) >= packet_size: #when bytes in buffer > packet size (18 for 8-bit)
             # Check header
-            if buffer[0] == 0xAA and buffer[1] == 0x55:
-                packet = buffer[:packet_size]
-                buffer = buffer[packet_size:]
-
-                # Packet ID
-                packet_id = packet[2]
-                
-
-                # Timestamp (little-endian 4 bytes)
-                timestamp = struct.unpack('<I', packet[3:7])[0] # <I = interpret 4 bytes of data as a 32-bit unsigned integer in little-endian order.
-                if packet_id == 1:
-                    start_time = timestamp
-                    print(f"Start time: {start_time}")
-                sample_times = [(start_time + (packet_id - 1)*40 + i*4) / 1000.0 for i in range(10)]
-                sample_times = [round(t, 4) for t in sample_times]
-                print(f"Sample times: {sample_times}")
-                # Samples (10 samples, 2 bytes each, little-endian)
-                samples = struct.unpack('<' + 'H'*10, packet[7:27])  # H = uint16, interpret 20 bytes as 10 unsigned 16-bit integers in little-endian order.
-
-                # End marker
-                end_marker = packet[27]
-                if end_marker != 0xFF:
-                    print("Warning: end marker mismatch")
-
-                with data_lock:
-                    received_samples_full.extend(samples)
-                    received_samples_plot.extend(samples)
-                    timestamps_full.extend(sample_times)
-                    timestamps_plot.extend(sample_times)
-
-                    if len(received_samples_plot) > max_samples_plotted:
-                        received_samples_plot[:] = received_samples_plot[-max_samples_plotted:]
-                        timestamps_plot[:] = timestamps_plot[-max_samples_plotted:]
-                # Print packet
-                packet_count += 1
-                print(f"Packet ID: {packet_id}, Timestamp: {timestamp}, Samples: {samples}")
-
-            else:
+            if buffer[0] != 0xAA or buffer[1] != 0x55:
                 buffer = buffer[1:]
+                continue
+            
+            
+            packet = buffer[:packet_size]
+            #print(packet)
+            buffer = buffer[packet_size:]
+            #print(buffer)
+
+            if packet[-1] != 0xFF:
+                print(" End marker mismatch, resyncing...")
+                while len(buffer) >= 2 and not (buffer[0] == 0xAA and buffer[1] == 0x55):
+                     buffer = buffer[1:]
+                continue
+            # Packet ID
+            packet_id = packet[2]
+            
+
+            # Timestamp (little-endian 4 bytes)
+            timestamp = struct.unpack('<I', packet[3:7])[0] # <I = interpret 4 bytes of data as a 32-bit unsigned integer in little-endian order.
+            # if packet_id == 1:
+            #     start_time = timestamp
+            #     print(f"Start time: {start_time}")
+            sample_times = [(timestamp + i*4) / 1000.0 for i in range(10)]
+            sample_times = [round(t, 4) for t in sample_times]
+            print(f"Sample times: {sample_times}")
+            # Samples (10 samples, 2 bytes each, little-endian)
+            samples = struct.unpack('<' + 'B'*10, packet[7:17])  # H = uint16, interpret 20 bytes as 10 unsigned 16-bit integers in little-endian order.
+
+           
+            with data_lock:
+                received_samples_full.extend(samples)
+                received_samples_plot.extend(samples)
+                timestamps_full.extend(sample_times)
+                timestamps_plot.extend(sample_times)
+
+                if len(received_samples_plot) > max_samples_plotted:
+                    received_samples_plot[:] = received_samples_plot[-max_samples_plotted:]
+                    timestamps_plot[:] = timestamps_plot[-max_samples_plotted:]
+            # Print packet
+            packet_count += 1
+            print(f"Packet ID: {packet_id}, Timestamp: {timestamp}, Samples: {samples}")
+
+            
     
     print(f"Exited read loop. stop_flag={stop_flag}, packet_count={packet_count}")
     print("Full set of values: ")
     print(received_samples_full)
-
     
+def keyboard_listener():
+    while True:
+        cmd = input("Type STOP to halt data stream: ").strip().upper()
+        if cmd == "STOP":
+            ser.write(b'STOP\n')
+            stop_flag.set()
+            print("Stop flag set.")
+            break
+
+def thread_stop_command():
+    listen_for_stop_thread = threading.Thread(target=keyboard_listener, daemon = True)
+    listen_for_stop_thread.start()
 
 # NEW FUNCTION - UPDATE PLOT
 def update_plot():
@@ -158,62 +168,46 @@ def update_plot():
             status_label.setText("Waiting for data...")                                      
 
 
-# ----------- PLOT FUNCTIONS --------------------
-def compare_data_plots(ecg_digital):
-    # plt.plot(received_samples[140:], label="Received ECG samples")
-    # plt.plot(ecg_digital[270:], label = 'Database ECG Data')
-    print("Showing final comparison plot...")
-    plt.plot(received_samples, label="Received ECG samples")
-    plt.plot(ecg_digital, label = 'Database ECG Data')
-
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
-    ax1.plot(received_samples, label="Received ECG samples")
-    ax1.set_title("Received ECG Samples")
-    ax2.plot(ecg_digital, label = 'Database ECG Data')
-    ax2.set_title("Database ECG Data")
-    plt.legend()
-    plt.show()
 
 
-def start_streaming_and_reading(ecg_digital):
+
+def start_streaming_from_mcu():
+    stop_streaming_from_mcu()
+    with data_lock:
+        received_samples_full.clear() #clear array of all received samples
+        received_samples_plot.clear() #clear array of plotted samples
+        timestamps_full.clear() #clear array of all timestamps
+        timestamps_plot.clear() #clear array of plotted timestamps
+    # stop_flag.clear() #reset stop flag to false, so thread is running
+    # ser.reset_input_buffer() #clear bytes in cue to be read from MCU 
+    # ser.reset_output_buffer() #clear bytes in cue to be sent to MCU
+
+
+    ser.write(b'START\n')     # <--- tell firmware to start
+    time.sleep(0.1)
+    mcu_read_thread = threading.Thread(target=read_from_mcu, args=(packet_size,), daemon=True)
+    mcu_read_thread.start()
     
-    def streaming_workflow():
-        """Complete streaming workflow - runs in background thread"""
-        
-        # Create and start read thread
-        read_thread = threading.Thread(target=read_from_mcu, args=(packet_size,), daemon=True)
-        read_thread.start()
-        
-        # Call stream() directly - it runs in THIS thread (workflow thread)
-        # This blocks the workflow thread for 10 seconds, but GUI keeps running!
-        stream(ecg_digital)
-        
-        # After streaming completes
-        time.sleep(0.5)
-        
-        # Wait for ESP32 to finish processing
-        print("Streaming complete, waiting for ESP32 to process...")
-        time.sleep(5.0)
-        
-        # Stop reading thread
-        stop_flag.set()
-        read_thread.join(timeout=2)
-        
-        print('Finished streaming - total samples:', len(received_samples_full))
-    # Start the entire workflow in a background thread
-    # This returns immediately, so GUI isn't blocked
-    threading.Thread(target=streaming_workflow, daemon=True).start() 
-       
-   
+def stop_streaming_from_mcu():
+    stop_flag.set()
+    ser.write(b'STOP\n')
+    time.sleep(0.05)      # let firmware stop
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
+    stop_flag.clear()
 
+  
 def main():
 
     global plot_widget, curve, status_label # global variables that will update over course of run
-
-    # GENERATE DATASET
-    ecg_digital = create_dataset(dataset_type, durations_json, bpm, fs, num_beats, open_source_time_s)
-    expected_packet_num = len(ecg_digital)/10
-    print(expected_packet_num)
+    with data_lock:
+        received_samples_full.clear()
+        received_samples_plot.clear()
+        timestamps_full.clear()
+        timestamps_plot.clear()
+    stop_flag.clear()
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
 
     """Is this all necessary?"""
     # Create Qt application
@@ -236,7 +230,7 @@ def main():
     plot_widget.setLabel('bottom', 'Time (s)')
     plot_widget.setTitle('Real-Time ECG Signal')
     plot_widget.showGrid(x=True, y=True)
-    plot_widget.setYRange(0, 4096)  # 12-bit ADC range
+    plot_widget.setYRange(90, 120)  # 8-bit ADC range
     ax = plot_widget.getAxis('bottom')
     ax.setTickSpacing(major=1.0, minor=0.5)  # 1 s major, 0.5 s minor
 
@@ -244,7 +238,7 @@ def main():
     curve = plot_widget.plot(pen=pg.mkPen(color='#00FF00', width=2))  # Green line
     
     # Create status label
-    status_label = QtWidgets.QLabel(f"Status: Ready to receive data (expecting {expected_packet_num} packets)")
+    status_label = QtWidgets.QLabel(f"Status: Ready to receive data ") #(expecting {expected_packet_num} packets)")
     
     # Add widgets to layout
     layout.addWidget(plot_widget)
@@ -253,10 +247,10 @@ def main():
     # Setup timer to update plot periodically
     timer = QtCore.QTimer()
     timer.timeout.connect(update_plot)
-    timer.start(80)  # Update every 80ms (20 FPS)
+    timer.start(200)  # Update every 80ms (20 FPS)
 
     # Start streaming in background (after small delay for GUI to load)
-    QtCore.QTimer.singleShot(500, lambda: start_streaming_and_reading(ecg_digital))
+    QtCore.QTimer.singleShot(500, lambda: (start_streaming_from_mcu(), thread_stop_command()))
     
     # Show window
     win.show()
@@ -266,5 +260,7 @@ def main():
     
 if __name__ == '__main__':
     main()
+
+
 
 
