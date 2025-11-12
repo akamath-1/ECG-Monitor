@@ -1,0 +1,19 @@
+{
+    "type_of_data": "open-source",
+    "open_source_time_s": 5,
+    "bpm": 75,
+    "sampling_hz": 250,
+    "num_beats": 5,
+    "heartbeat_type": "regular",
+    "durations" : {
+        "P": 0.1,
+        "PR": 0.05,
+        "QRS": 0.1,
+        "ST": 0.15,
+        "T": 0.2,
+        "TP": 0.4
+    },
+    "plot_window_s": 5
+    
+  }
+
