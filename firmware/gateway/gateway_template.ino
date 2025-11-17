@@ -4,7 +4,7 @@
 #define LED_PIN 2
 
 // #define SAMPLES_PER_PACKET 10
-const uint16_t heartbeat_signal[] = {}
+const uint16_t heartbeat_signal[] = {};
 
 const uint32_t heartbeat_length = sizeof(heartbeat_signal) / sizeof(heartbeat_signal[0]); //length of heartbeat_signal, should be 7500 (30 sec of data)
 
