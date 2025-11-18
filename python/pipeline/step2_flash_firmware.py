@@ -2,6 +2,7 @@ import os
 import subprocess
 import serial
 import serial.tools.list_ports
+import time
 
 
 class FirmwareGenerator:
@@ -130,11 +131,18 @@ class FirmwareGenerator:
             self.fqbn,
             "--port",
             port,
+            "--verbose",  # Show detailed progress
             firmware_dir,
         ]  # create command string
+
+        print("Starting upload (this may take 15-30 seconds)...")
+        print(
+            "If upload hangs, try pressing and holding the BOOT button (right of USB port) on the ESP32"
+        )
+
         result = subprocess.run(
-            cmd, capture_output=True, text=True
-        )  # run command capture output message
+            cmd, text=True
+        )  # run command and stream real-time updates of status
         # capture_output = 0 for success, 1 for failure
         # text = error output (string)
         if result.returncode == 0:
@@ -183,7 +191,7 @@ def main(digital_dataset, file_id):
     compiled = generator.compile_firmware(firmware_dir)
 
     if not compiled:
-        print("Compile failed, cannot go further")
+        print("Compile failed, cannot go further.")
         return None
 
     # upload firmware
@@ -192,6 +200,13 @@ def main(digital_dataset, file_id):
     if not uploaded:
         print("Upload to ESP32 failed. Please try again.")
         return None
+
+    # successful upload:
+    print(
+        "Firmware uploaded! Waiting for ESP32 to restart... please hit RESET button on ESP32 in the next four seconds to ensure successful upload."
+    )
+    time.sleep(4)
+    return True
 
 
 if __name__ == "__main__":
