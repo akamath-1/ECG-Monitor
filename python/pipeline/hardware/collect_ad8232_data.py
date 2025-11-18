@@ -43,15 +43,15 @@ ADC_MAX = 4095.0
 GAIN = 500
 
 # FILE DESCRIPTION
-CONDITION = "rest"  # or "movement", "post_exercise"
-RUN_NUMBER = 2
+CONDITION = ""  # "rest" or "movement", "post_exercise"
+RUN_NUMBER = 1
 DURATION_SEC = 30
 SAMPLING_RATE = 250
 TARGET_SAMPLES = DURATION_SEC * SAMPLING_RATE
 data_file_name = (
     f"ad8232_{CONDITION}_run{RUN_NUMBER}_{DURATION_SEC}_{SAMPLING_RATE}.csv"
 )
-output_dir = "datasets/AD8232 Datasets"
+output_dir = "datasets/AD8232 Data"
 os.makedirs(output_dir, exist_ok=True)
 file_path_name = os.path.join(output_dir, data_file_name)
 
@@ -189,3 +189,7 @@ def main():
     else:
         print("❌ Dataset discarded. Run again to collect new data.")
         return None
+
+
+if __name__ == "__main__":
+    main()
