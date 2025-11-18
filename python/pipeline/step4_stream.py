@@ -61,10 +61,8 @@ class Config:
 
 # GLOBAL VARIABLES ====================================================================================
 
-ser = serial.Serial(
-    "/dev/cu.usbserial-0001", 115200, timeout=1
-)  # bottom port, closer to me
-# signalgen_esp32_ser = serial.Serial('/dev/cu.usbserial-4', 115200, timeout=1) #top port, further away from me
+ser = serial.Serial("/dev/cu.usbserial-0001", 115200, timeout=1)
+# signalgen_esp32_ser = serial.Serial('/dev/cu.usbserial-4', 115200, timeout=1)
 
 # plug in main MCU to bottom, signal gen MCU to top port
 time.sleep(2)  # Wait for connection to stabilize
@@ -140,11 +138,12 @@ def read_from_mcu(
             packet = (
                 parser.get_packet()
             )  # unpacks packet and assigns values to individual Parser attributes
-            mcu_timestamps.append(packet.timestamp)  # in ms for now
-            # Check header
             if packet is None:
                 continue
             parser.packet_count += 1
+            mcu_timestamps.append(packet.timestamp)  # in ms for now
+            # Check header
+
             # print(f"Packet ID: {packet.packet_id}, Packet Count: {parser.packet_count}, Timestamp: {packet.timestamp}, Samples: {packet.samples}")
 
             if parser.packet_count == 1:
@@ -206,6 +205,8 @@ def read_from_mcu(
                     packet.packet_id,
                     parser.packet_count,
                 )
+                # if global_sample_counter % 1000 == 0:
+                #     print(f"DEBUG: csv_queue size = {csv_logger.csv_queue.qsize()}")
                 global_sample_counter += 1
             with data_lock:
                 received_samples_full.extend(packet.samples)
@@ -311,6 +312,7 @@ def start_streaming_from_mcu(
     bpm_detector.__init__(fs=config.fs, window_of_averaging=5)
 
     ser.write(b"START\n")  # <--- tell firmware to start
+    print("START command written to MCU")
     # time.sleep(0.2)
     # signalgen_esp32_ser.write(b'GO\n')
     time.sleep(0.1)
