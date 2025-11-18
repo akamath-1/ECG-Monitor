@@ -214,16 +214,18 @@ class BatchTester:
         }
 
 
-def main(file_name=None, output_csv_path=None):
-    # ADD GRAPHING FUNCTIONALITY TOO
-    file_name = file_name
-    digital_dataset, r_peaks, num_peaks, inst_bpms = generate_dataset_main(
-        file_name, output_csv_path=output_csv_path, bit_res=12, start_s=0, end_s=30
-    )
-    print(
-        f"Digital dataset (parsed from {file_name} to paste into Gateway MCU firmware:)"
-    )
-    print(digital_dataset)
+def main(file_name=None, output_csv_path=None, digital_dataset=None):
+
+    if digital_dataset == None:
+        file_name = file_name
+        digital_dataset, r_peaks, num_peaks, inst_bpms = generate_dataset_main(
+            file_name, output_csv_path=output_csv_path, bit_res=12, start_s=0, end_s=30
+        )
+        print(
+            f"Digital dataset (parsed from {file_name} to paste into Gateway MCU firmware:)"
+        )
+        print(digital_dataset)
+
     tester = BatchTester(fs=250, use_filter=False)
     results = tester.run(digital_dataset)
 
@@ -237,7 +239,7 @@ def main(file_name=None, output_csv_path=None):
 
     csv_filename = os.path.join(output_csv_path, "batch_processed_outputs.csv")
 
-    min_len = min(len(r_peaks) - 1, len(inst_bpms))
+    min_len = min(len(detected_peaks) - 1, len(bpm_history))
     with open(csv_filename, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["Detected R_peak_index", "Digital Value", "Instantaneous_BPM"])
