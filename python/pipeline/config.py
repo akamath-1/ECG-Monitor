@@ -10,7 +10,7 @@ def get_output_dir(patient_id: str, segment_id: str) -> str:
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
     # Define base folder for all logs
-    data_logs_dir = os.path.join(project_root, "data_logs")
+    data_logs_dir = os.path.join(project_root, "data_logs", "PhysioNet")
 
     # Lowercase patient + segment combined
     output_folder = f"{patient_id.lower()}_{segment_id.lower()}"
