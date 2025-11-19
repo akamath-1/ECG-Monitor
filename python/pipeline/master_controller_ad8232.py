@@ -10,7 +10,7 @@ from python.pipeline.step1_generate_dataset_ad8232 import (
 )
 from python.pipeline.step2_flash_firmware import main as generate_and_flash_firmware
 from python.pipeline.step3_batchprocess import main as batch_test_main
-from python.validation.compare_ad8232_batch_vs_stream import (
+from python.validation.compare_rpeak_bpm_ad8232 import (
     main as compare_ad8232_data_main,
 )
 from python.pipeline.config import get_output_dir

@@ -5,8 +5,8 @@ from datetime import datetime
 
 # ========= IMPORT CLASSES FROM CORE and STEP1 (GENERATE DATASET) ===================================================================
 
-from python.pipeline.step1_generate_dataset import generateData
-from python.pipeline.step1_generate_dataset import main as generate_dataset_main
+from python.pipeline.step1_generate_dataset_physionet import generateData
+from python.pipeline.step1_generate_dataset_physionet import main as generate_dataset_main
 from python.core.signal_processing import (
     R_peak_detector,
     BPMDetector,

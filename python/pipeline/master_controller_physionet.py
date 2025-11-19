@@ -4,10 +4,10 @@ import time
 from datetime import datetime
 
 # === Import local modules ===
-from python.pipeline.step1_generate_dataset import main as generate_dataset_main
+from python.pipeline.step1_generate_dataset_physionet import main as generate_dataset_main
 from python.pipeline.step2_flash_firmware import main as generate_and_flash_firmware
 from python.pipeline.step3_batchprocess import main as batch_test_main
-from python.validation.compare_csv_data_rpeak_bpm import main as compare_data_main
+from python.validation.compare_rpeak_bpm_physionet import main as compare_data_main
 from python.pipeline.config import get_output_dir
 
 # === Path to your streaming script ===
