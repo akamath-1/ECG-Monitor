@@ -1,0 +1,30 @@
+## Project Structure
+
+```
+ECG-Monitor/
+├── python/
+│   ├── core/                          # Core signal processing
+│   │   ├── signal_processing.py       # R-peak detector, BPM calculator
+│   │   ├── data_handling.py           # Packet parser
+│   │   └── logging.py                 # CSV logger
+│   ├── pipeline/                      # Validation pipelines
+│   │   ├── master_controller_physionet.py
+│   │   ├── master_controller_ad8232.py
+│   │   ├── step1_generate_dataset_physionet.py
+│   │   ├── step1_generate_dataset_ad8232.py
+│   │   ├── step2_flash_firmware.py
+│   │   ├── step3_batchprocess.py
+│   │   ├── step4_stream.py
+│   │   └── hardware/                  # AD8232 data collection
+│   └── validation/                    # Comparison tools
+│       ├── compare_rpeak_bpm_physionet.py
+│       └── compare_rpeak_bpm_ad8232.py
+├── firmware/
+│   └── gateway/                       # ESP32 firmware
+├── docs/                              # Documentation
+├── datasets/                          # ECG data
+├── data_logs/                         # Output files
+└── heartrate_config.json              # Configuration
+```
+
+---
