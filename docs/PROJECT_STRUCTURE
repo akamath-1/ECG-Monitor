@@ -16,6 +16,12 @@ ECG-Monitor/
 │   │   ├── step3_batchprocess.py
 │   │   ├── step4_stream.py
 │   │   └── hardware/                  # AD8232 data collection
+│   ├── tests/                         # Test scripts
+│   │   └── ble/                       # BLE connectivity tests
+│   │       ├── ble_config.py          # BLE UUIDs and configuration
+│   │       ├── test_ble_detection.py  # Device detection test
+│   │       ├── test_ble_simple.py     # Simple mode test
+│   │       └── test_ble_streaming.py  # Stream mode test
 │   └── validation/                    # Comparison tools
 │       ├── compare_rpeak_bpm_physionet.py
 │       └── compare_rpeak_bpm_ad8232.py
