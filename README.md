@@ -2,7 +2,7 @@
 # About this Project
 
 
-This project focuses on developing portable, battery-operated heart rate monitor using an ESP32 and AD8232 ECG analog front-end (AFE) for real-time cardiac health and fitness monitoring.
+This project focuses on developing a portable, battery-operated heart rate monitor using an ESP32 and AD8232 ECG analog front-end (AFE) for real-time cardiac health and fitness monitoring.
 
 I started this project to create a portable and accessible cardiac monitor that could be used as a supplemental tool to assess cardiac health. As a consumer of a few different biowearable products myself, I have gained valuable insight regarding my health from using these technologies in my day-to-day life. The field of biowearables holds so much promise to enable consumers to make more informed decisions about health management, and I am constantly inspired by the technologies that others are developing in this field. However, commercially available biowearable products can be highly priced and difficult to modify or extend, and I wanted to challenge myself to see what I could create with easily sourceable, off-the-shelf components and open-source code. I have outlined below what I have created so far, and will continue to add new features and learnings to this repository as I further develop this monitoring system. 
 
