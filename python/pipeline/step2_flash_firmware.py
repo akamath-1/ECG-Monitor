@@ -22,7 +22,7 @@ class FirmwareGenerator:
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
         firmware_dir = os.path.join(
-            project_root, "firmware", "gateway", "gateway_template.ino"
+            project_root, "firmware", "gateway", self.fw_template_name
         )
 
         self.fw_template_path = firmware_dir
