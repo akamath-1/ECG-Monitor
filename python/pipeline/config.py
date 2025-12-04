@@ -1,7 +1,7 @@
 import os
 
 
-def get_output_dir(patient_id: str, segment_id: str) -> str:
+def get_output_dir(patient_id: str, segment_id: str, connection_type: str) -> str:
     """
     Returns a consistent lowercase output directory for all CSVs/logs.
     Example: .../data_logs/p00000_s00
@@ -16,7 +16,7 @@ def get_output_dir(patient_id: str, segment_id: str) -> str:
     output_folder = f"{patient_id.lower()}_{segment_id.lower()}"
 
     # Full path to this experiment's folder
-    output_dir = os.path.join(data_logs_dir, output_folder)
+    output_dir = os.path.join(data_logs_dir, output_folder, connection_type)
 
     # Make the directory if it doesn’t exist
     os.makedirs(output_dir, exist_ok=True)
