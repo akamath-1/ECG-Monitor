@@ -26,21 +26,27 @@ def convert_analog_to_digital(analog_data_file_name):
     return ad8232_recorded_data_digital
 
 
-def main(file_to_analyze="ad8232_rest_run2_30_250.csv"):
+def main(file_to_analyze="ad8232_rest_run2_30_250.csv", output_csv_path=None):
     # STEP 1: CREATE PATH FOR OUTPUT OF THIS FILE (DIGITAL DATA)
 
-    analog_data_file_name = f"datasets/AD8232 Datasets/{file_to_analyze}"
+    analog_data_file_name = f"datasets/AD8232 Data/{file_to_analyze}"
     base_file_name = os.path.basename(
         analog_data_file_name
     )  # "ad8232_rest_run2_30_250.csv"
     base_file_name_no_ext = os.path.splitext(base_file_name)[
         0
     ]  # "ad8232_rest_run2_30_250"
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-    output_dir = os.path.join(
-        project_root, "data_logs", "AD8232", base_file_name_no_ext
-    )
-    os.makedirs(output_dir, exist_ok=True)
+
+    # If output_csv_path is provided, use it; otherwise use default location
+    if output_csv_path is None:
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+        output_dir = os.path.join(
+            project_root, "data_logs", "AD8232", base_file_name_no_ext
+        )
+        os.makedirs(output_dir, exist_ok=True)
+    else:
+        output_dir = output_csv_path
+
     final_output_path = os.path.join(output_dir, "Digital Dataset.txt")
 
     # STEP 2: OPEN FILE AND APPEND CONTENTS TO ARRAY

@@ -19,7 +19,7 @@ import os
 import sys
 
 
-def plot_all(csv_log_folder_path):
+def plot_all(csv_log_folder_path, save_path=None):
     """
     Create a 2-subplot comparison plot:
     - Top: ECG signal with R-peaks overlaid (batch vs streamed)
@@ -27,6 +27,7 @@ def plot_all(csv_log_folder_path):
 
     Args:
         csv_log_folder_path: Path to folder containing the CSV files
+        save_path: Optional path to save the figure. If None, figure is only displayed.
     """
     fig, axs = plt.subplots(2, 1, figsize=(14, 10), sharex=False)
 
@@ -47,9 +48,7 @@ def plot_all(csv_log_folder_path):
     # Try AD8232 naming convention first, then PhysioNet convention
     digital_dataset_path = os.path.join(csv_log_folder_path, "Digital Dataset.txt")
     if not os.path.exists(digital_dataset_path):
-        digital_dataset_path = os.path.join(
-            csv_log_folder_path, "ECG Digital Dataset.csv"
-        )
+        digital_dataset_path = os.path.join(csv_log_folder_path, "Digital Dataset.txt")
 
     ecg_digital = pd.read_csv(digital_dataset_path, header=None).squeeze()
 
@@ -108,11 +107,24 @@ def plot_all(csv_log_folder_path):
     axs[1].grid(True)
 
     plt.tight_layout()
+
+    # Save figure if path provided
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches="tight")
+        print(f"Comparison plot saved to: {save_path}")
+
     plt.show()
 
 
-def main(csv_logs_folder_path):
-    plot_all(csv_logs_folder_path)
+def main(csv_logs_folder_path, save_path=None):
+    """
+    Main function to run comparison plots.
+
+    Args:
+        csv_logs_folder_path: Path to folder containing CSV files
+        save_path: Optional path to save the comparison plot
+    """
+    plot_all(csv_logs_folder_path, save_path=save_path)
 
 
 if __name__ == "__main__":
