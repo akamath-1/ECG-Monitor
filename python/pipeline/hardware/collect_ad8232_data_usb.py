@@ -1,4 +1,14 @@
-#!/usr/bin/env python3
+"""
+Python script to receive streamed AD8232 data from ESP32 via USB.
+
+How to Use:
+Change the file name variables as needed to reflect testing condition. Make sure to maintain unique file names for every new testing condition.
+Specify duration of recording in seconds.
+Make sure that the correct firmware file (stream_ad8232_data_usb.ino) has been flashed to the MCU.
+Run the file. When the recording session is complete, a graph will be generated of the collected data.
+Review the graph - if the data looks acceptable, enter "Y" into the terminal to save it to the specified file path. If not, enter "N" (this will discard the dataset).
+"""
+
 import matplotlib.pyplot as plt
 import serial.tools.list_ports
 import os
@@ -31,9 +41,6 @@ def detect_port():
 
 # Configuration
 PORT = detect_port()
-# (
-#     "/dev/cu.usbserial-0001"  # Change this to your port (e.g., '/dev/ttyUSB0' on Linux)
-# )
 print(PORT)
 BAUDRATE = 115200
 TIMEOUT = 2
@@ -42,12 +49,16 @@ V_MAX = 3.3
 ADC_MAX = 4095.0
 GAIN = 500
 
-# FILE DESCRIPTION
-CONDITION = ""  # "rest" or "movement", "post_exercise"
+# ============== FILE DESCRIPTION - USER CHANGES THESE ! ===============================
+CONDITION = "walk"  # "rest" or "movement", "post_exercise"
 RUN_NUMBER = 1
 DURATION_SEC = 30
+# =============================================================================================
+
 SAMPLING_RATE = 250
 TARGET_SAMPLES = DURATION_SEC * SAMPLING_RATE
+
+
 data_file_name = (
     f"ad8232_{CONDITION}_run{RUN_NUMBER}_{DURATION_SEC}_{SAMPLING_RATE}.csv"
 )
@@ -158,7 +169,14 @@ def main():
 
     print(f"Data saved to {file_path_name}.")
 
+    # Plot data
+    plt.figure(figsize=(12, 6))
     plt.plot(ad8232_recorded_data)
+    plt.title("AD8232 ECG Data (USB-streamed)")
+    plt.xlabel("Sample")
+    plt.ylabel("ADC Value")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
     plt.show()
 
     print("\n" + "=" * 60)
@@ -180,10 +198,25 @@ def main():
                     [round(voltages_raw_mV[i], 3), round(voltages_biased[i], 3)]
                 )
 
+        # Save graph image
+        graph_file_name = data_file_name.replace(".csv", "_graph.png")
+        graph_file_path = os.path.join(output_dir, graph_file_name)
+
+        plt.figure(figsize=(12, 6))
+        plt.plot(ad8232_recorded_data)
+        plt.title("AD8232 ECG Data (USB-streamed)")
+        plt.xlabel("Sample")
+        plt.ylabel("ADC Value")
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(graph_file_path, dpi=300, bbox_inches="tight")
+        plt.close()  # Close the figure to free memory
+
         print(f"✅ Data saved to {file_path_name}")
+        print(f"✅ Graph saved to {graph_file_path}")
         print(f"   Filename: {data_file_name}")
         print("\nYou can now run the processing pipeline:")
-        print(f"   python python/pipeline/master_controller_ad8232.py")
+        print(f"   python python/pipeline/master_controller_ad8232_usb.py")
         return data_file_name
 
     else:
