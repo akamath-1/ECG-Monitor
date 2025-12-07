@@ -5,17 +5,17 @@ from datetime import datetime
 
 # === Import local modules ===
 
-from python.pipeline.step1_generate_dataset_ad8232 import (
-    main as generate_dataset_ad8232_main,
-)
-from python.pipeline.step2_flash_firmware_realtime import (
+
+from python.real_time_testing_pipeline.step1_flash_firmware_realtime import (
     main as generate_and_flash_firmware,
 )
-from python.pipeline.step4_batchprocess_ecg_realtime import main as batch_test_main
+from python.real_time_testing_pipeline.step3_batchprocess_ecg_realtime import (
+    main as batch_test_main,
+)
 from python.validation.compare_rpeak_bpm_ad8232_livestreamed import (
     main as compare_ad8232_data_main_livestreamed,
 )
-from python.pipeline.config import get_output_dir
+from python.real_time_testing_pipeline.config import get_output_dir
 
 # FILE DESCRIPTION
 CONDITION = "walk_new_electrodes_on_chest_and_ribs"  # or "movement", "post_exercise"
@@ -28,7 +28,7 @@ data_file_name_base = (
 )
 
 # === PATHS =============================
-STREAM_SCRIPT = os.path.join(os.path.dirname(__file__), "step3_stream_ble_realtime.py")
+STREAM_SCRIPT = os.path.join(os.path.dirname(__file__), "step2_stream_ble_realtime.py")
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 
