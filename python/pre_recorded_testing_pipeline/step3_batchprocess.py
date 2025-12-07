@@ -5,8 +5,7 @@ from datetime import datetime
 
 # ========= IMPORT CLASSES FROM CORE and STEP1 (GENERATE DATASET) ===================================================================
 
-from python.pipeline.step1_generate_dataset_physionet import generateData
-from python.pipeline.step1_generate_dataset_physionet import (
+from python.pre_recorded_testing_pipeline.step1_generate_dataset_physionet import (
     main as generate_dataset_main,
 )
 from python.core.signal_processing import (
@@ -223,10 +222,6 @@ def main(file_name=None, output_csv_path=None, digital_dataset=None):
         digital_dataset, r_peaks, num_peaks, inst_bpms = generate_dataset_main(
             file_name, output_csv_path=output_csv_path, bit_res=12, start_s=0, end_s=30
         )
-        # print(
-        #     f"Digital dataset (parsed from {file_name} to paste into Gateway MCU firmware:)"
-        # )
-        # print(digital_dataset)
 
     tester = BatchTester(fs=250, use_filter=False)
     results = tester.run(digital_dataset)

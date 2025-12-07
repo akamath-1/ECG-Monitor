@@ -153,7 +153,7 @@ def run_full_pipeline():
     # === STEP 3: Run batch processing ===
     print("=== STEP 3: Running batch processing ===")
     batch_test_main(
-        file_name, output_csv_path=output_dir
+        file_name, output_csv_path=output_dir, digital_dataset=digital_dataset
     )  # This saves the batch processed outputs
     print("✅ Batch processing complete.\n")
 
