@@ -5,27 +5,29 @@ from datetime import datetime
 
 # === Import local modules ===
 # Data generation module
-from python.pipeline.step1_generate_dataset_physionet import (
+from python.pre_recorded_testing_pipeline.step1_generate_dataset_physionet import (
     main as generate_dataset_main,
 )
 
 # Firmware flashing modules
-from python.pipeline.step2_flash_firmware_ble import (
+from python.pre_recorded_testing_pipeline.step2_flash_firmware_ble import (
     main as generate_and_flash_firmware_ble,
 )
-from python.pipeline.step2_flash_firmware_usb import (
+from python.pre_recorded_testing_pipeline.step2_flash_firmware_usb import (
     main as generate_and_flash_firmware_usb,
 )
 
 
 # Batch processing modules
-from python.pipeline.step3_batchprocess import main as batch_test_main
+from python.pre_recorded_testing_pipeline.step3_batchprocess import (
+    main as batch_test_main,
+)
 
 # Data validation modules
 from python.validation.compare_rpeak_bpm_physionet import main as compare_data_main
 
 # Output dir
-from python.pipeline.config import get_output_dir
+from python.pre_recorded_testing_pipeline.config import get_output_dir
 
 
 # === Path to your streaming script ===

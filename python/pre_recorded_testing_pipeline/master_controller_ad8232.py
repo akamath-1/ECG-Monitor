@@ -5,27 +5,29 @@ from datetime import datetime
 
 # === Import local modules ===
 # Data generation module
-from python.pipeline.step1_generate_dataset_ad8232 import (
+from python.pre_recorded_testing_pipeline.step1_generate_dataset_ad8232 import (
     main as generate_dataset_ad8232_main,
 )
 
 # Firmware flashing modules
-from python.pipeline.step2_flash_firmware_ble import (
+from python.pre_recorded_testing_pipeline.step2_flash_firmware_ble import (
     main as generate_and_flash_firmware_ble,
 )
-from python.pipeline.step2_flash_firmware_usb import (
+from python.pre_recorded_testing_pipeline.step2_flash_firmware_usb import (
     main as generate_and_flash_firmware_usb,
 )
 
 
 # Batch processing modules
-from python.pipeline.step3_batchprocess import main as batch_test_main
+from python.pre_recorded_testing_pipeline.step3_batchprocess import (
+    main as batch_test_main,
+)
 
 # Data validation modules
 from python.validation.compare_rpeak_bpm_ad8232 import main as compare_data_main
 
 # Output dir
-from python.pipeline.config import get_output_dir
+from python.pre_recorded_testing_pipeline.config import get_output_dir
 
 
 # # FILE DESCRIPTION
@@ -61,7 +63,7 @@ def collect_user_input_test_file():
             break
         else:
             print(
-                f"AD8232 dataset not found for {input_csv}. Please enter a valid file name or run data collection for the desired test condition (python3 python/pipeline/hardware/collect_ad8232_data.py)."
+                f"AD8232 dataset not found for {input_csv}. Please enter a valid file name or run data collection for the desired test condition (python3 python/hardware/collect_ad8232_data.py)."
             )
 
     return data_file_name_base, input_csv
@@ -99,7 +101,11 @@ def run_full_pipeline():
     data_transport_method = collect_user_input_USB_BLE()
     # OUTPUT DIRECTORY FOR THIS RUN:
     output_dir = os.path.join(
-        project_root, "data_logs", "AD8232", data_file_name_base, data_transport_method.upper()
+        project_root,
+        "data_logs",
+        "AD8232",
+        data_file_name_base,
+        data_transport_method.upper(),
     )
     os.makedirs(output_dir, exist_ok=True)
 

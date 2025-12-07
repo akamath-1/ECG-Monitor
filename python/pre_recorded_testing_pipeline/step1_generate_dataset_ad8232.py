@@ -5,7 +5,7 @@ import csv
 import os
 import pandas as pd
 
-# from python.pipeline.hardware.collect_ad8232_data import main as collect_ad8232_data
+# from python.hardware.collect_ad8232_data import main as collect_ad8232_data
 # read specified dataset from ecg-monitor/datasets/AD8232/...
 # create an array out of ecg_monitor
 
