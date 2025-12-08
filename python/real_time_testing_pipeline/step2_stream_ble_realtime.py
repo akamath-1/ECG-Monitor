@@ -136,10 +136,14 @@ async def find_and_connect():
         return None
 
 
-async def ble_async_main():
+async def ble_async_main(duration_sec=None):
     """
     Async function that runs in BLE thread.
     Mirrors the structure from test_stream_mode() in test_ble_streaming.py
+
+    Args:
+        duration_sec: Optional recording duration in seconds. If provided,
+                     automatically stops after this duration.
     """
     global ble_client
 
@@ -166,10 +170,27 @@ async def ble_async_main():
         print("✓ Streaming started")
         ble_connection_ready.set()
 
-        # Step 3: Keep connection alive until stop_flag is set
-        print("[3/4] Streaming data (press STOP to end)...")
-        while not stop_flag.is_set():
-            await asyncio.sleep(0.1)
+        # Step 3: Keep connection alive until stop_flag is set OR duration expires
+        if duration_sec is not None:
+            print(
+                f"[3/4] Streaming data for {duration_sec} seconds (or type STOP to end early)..."
+            )
+            start_time = asyncio.get_event_loop().time()
+            elapsed = 0
+
+            while not stop_flag.is_set() and elapsed < duration_sec:
+                await asyncio.sleep(0.1)
+                elapsed = asyncio.get_event_loop().time() - start_time
+
+            if elapsed >= duration_sec:
+                print(
+                    f"\nRecording finished (user-set duration: {duration_sec}s). Stopping now..."
+                )
+                stop_flag.set()
+        else:
+            print("[3/4] Streaming data (press STOP to end)...")
+            while not stop_flag.is_set():
+                await asyncio.sleep(0.1)
 
         # Step 4: Cleanup - send STOP and disconnect (matches test_ble_streaming.py:232-233)
         print("[4/4] Stopping stream...")
@@ -196,13 +217,16 @@ async def ble_async_main():
             print(f"Warning: Error during disconnect: {e}")
 
 
-def ble_thread_func():
+def ble_thread_func(duration_sec=None):
     """
     Wrapper function that runs asyncio event loop in BLE thread.
     This is what gets passed to threading.Thread()
+
+    Args:
+        duration_sec: Optional recording duration in seconds
     """
     try:
-        asyncio.run(ble_async_main())
+        asyncio.run(ble_async_main(duration_sec))
     except Exception as e:
         print(f"BLE thread error: {e}")
         import traceback
@@ -412,8 +436,26 @@ def update_plot():
 
 
 def start_streaming_from_mcu(
-    config, csv_logger, bpm_logger, detector, bpm_detector, bandpass_filter
+    config,
+    csv_logger,
+    bpm_logger,
+    detector,
+    bpm_detector,
+    bandpass_filter,
+    duration_sec=None,
 ):
+    """
+    Start BLE streaming from ESP32.
+
+    Args:
+        config: Configuration object
+        csv_logger: CSV logger for raw data
+        bpm_logger: CSV logger for BPM data
+        detector: R-peak detector
+        bpm_detector: BPM detector
+        bandpass_filter: Bandpass filter
+        duration_sec: Optional recording duration in seconds
+    """
     global global_sample_counter, timestamp_errors, peak_timestamp_errors, last_packet_time, ble_thread
     # Initialize to future time to give ESP32 time for 3-second startup delay
     last_packet_time = time.time() + 5.0  # Add 5 seconds buffer
@@ -445,9 +487,11 @@ def start_streaming_from_mcu(
     while not ble_data_queue.empty():
         ble_data_queue.get()
 
-    # Start BLE connection in background thread
+    # Start BLE connection in background thread with duration parameter
     print("Starting BLE connection thread...")
-    ble_thread = threading.Thread(target=ble_thread_func, daemon=True)
+    ble_thread = threading.Thread(
+        target=lambda: ble_thread_func(duration_sec), daemon=True
+    )
     ble_thread.start()
 
     # Wait for BLE connection to complete (with timeout)
@@ -480,12 +524,27 @@ def stop_streaming_from_mcu():
     stop_flag.clear()
 
 
-def main(output_csv_path=None):
+def main(output_csv_path=None, duration_sec=None):
+    """
+    Main function to run real-time BLE ECG streaming.
 
-    # Create default folder if output_csv_path = empty
+    Args:
+        output_csv_path: Directory to save CSV files
+        duration_sec: Optional recording duration in seconds
+    """
+
+    # Parse command line arguments
+    # Format: python step2_stream_ble_realtime.py <output_path> [duration_sec]
     if len(sys.argv) > 1:
         output_csv_path = sys.argv[1]
-    elif output_csv_path is None:
+    if len(sys.argv) > 2:
+        try:
+            duration_sec = int(sys.argv[2])
+            print(f"Recording duration set to {duration_sec} seconds")
+        except ValueError:
+            print(f"Warning: Invalid duration '{sys.argv[2]}', ignoring...")
+
+    if output_csv_path is None:
         output_csv_path = os.path.join(os.getcwd(), "data_logs/default_run")
 
     global plot_widget, curve, status_label  # global variables that will update over course of run
@@ -591,7 +650,13 @@ def main(output_csv_path=None):
     def start_everything():
 
         start_streaming_from_mcu(
-            config, csv_logger, bpm_logger, detector, bpm_detector, bandpass_filter
+            config,
+            csv_logger,
+            bpm_logger,
+            detector,
+            bpm_detector,
+            bandpass_filter,
+            duration_sec,
         )
         thread_stop_command()
 
