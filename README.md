@@ -4,27 +4,27 @@
 
 This project focuses on developing a portable, battery-operated heart rate monitor using an ESP32 and AD8232 ECG analog front-end (AFE) for real-time cardiac health and fitness monitoring.
 
-I started this project to create a portable and accessible cardiac monitor that could be used as a supplemental tool to assess cardiac health. As a consumer of a few different biowearable products myself, I have gained valuable insight regarding my health from using these technologies in my day-to-day life. The field of biowearables holds so much promise to enable consumers to make more informed decisions about health management, and I am constantly inspired by the technologies that others are developing in this field. However, commercially available biowearable products can be highly priced and difficult to modify or extend, and I wanted to challenge myself to see what I could create with easily sourceable, off-the-shelf components and open-source code. I have outlined below what I have created so far, and will continue to add new features and learnings to this repository as I further develop this monitoring system. 
+I started this project to create a portable and accessible cardiac monitor that could be used as a supplemental tool to assess cardiac health. As a consumer of a few different biowearable products myself, I have seen how valuable they can be for health management, and was curious about how much of that functionality could be recreated and extended using open-source tools. I wanted to challenge myself to see what I could develop with easily sourceable, off-the-shelf hardware components and open-source code. I have outlined below what I have created so far, and will continue to add new features and learnings to this repository as I further develop this monitoring system. 
 
 [![Project Status](https://img.shields.io/badge/status-active%20development-green)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 
 ---
 
-## Project Goals
+## Project Overview and Goals
 
-So far, I have developed a system that: 
-- Acquires ECG signals using the AD8232 analog front-end 
-- Processes data in the firmware of an ESP32 microcontroller and streams the data to a host device via a USB-UART serial interface
-- Implements back-end software to receive the streamed data and further process it for analysis (additional details below) 
+![ECG Monitor Prototype Image](./assets/ECG_Monitor.jpg)
+
+So far, I have developed a prototype monitoring system that: 
+- Acquires ECG signals using the AD8232 analog front-end (AFE)
+- Processes data in the firmware of an ESP32 microcontroller and streams the data to a host device via wireless transport (BLE)
+- Implements back-end software to receive the streamed data and perform live heart rate analysis (additional details below) 
+
+I have also developed a testing framework for the beat-detection algorithm, intended to enable repeatable testing and optimize the accuracy of heartrate analysis in the system. This testing framework is fully automated, and runs a data processing pipeline almost identical to the monitoring system prototype pipeline on pre-recorded ECG datasets (further detailed below). It supports both wired (USB-UART serial interace) and wireless (BLE) data transport.
 
 Currently, I am implementing features to:
-- Integrate the AD8232 into the pipeline for *both* live signal acquisition and processing
-- Wirelessly stream collect signal data from the ESP32 to a host device via BLE or Wi-Fi
-- Power the system via battery
-
-Future steps will include:
-- Advancing the beat-detection algorithm to better handle signal noise and detect abornmalities and deviations in heart rate 
+- Advance the beat-detection algorithm to better handle signal noise and detect abornmalities and deviations in heart rate in the back-end software
+- Improve the hardware (wiring, electrode placement, additional electronic components) of the system to reduce signal noise upstream 
 - Integrating test protocols that can be used to assess cardiac fitness
 
 
@@ -34,26 +34,42 @@ I have included further detail below about the current capabilities of this ECG 
 
 ## Key Features
 
-Currently, this repository contains a **validation and testing framework** for ECG signal processing algorithms. The framework is designed to process two pre-recorded sources of ECG data: open-source ECG data available from PhysioNet's database*, and ECG data collected via the AD8232-ESP32 module. It implements the following key features:
+Currently, this repository contains two complementary systems: a **real-time prototype monitoring system** and a **validation and testing framework**. These two systems share the same processing pipeline, but use separate ECG data sources, detailed below:
 
-- **Multi-source validation** - Compares the peaks and BPM values calculated from batch-processed ECG data and real-time streaming (as well ground-truth annotations when applicable) to verify algorithm consistency across processing methods
-- **Real-time visualization** - Live ECG plotting with PyQt5/pyqtgraph
-- **Pan-Tompkins algorithm** - Calculation method for R-peak detection
-- **Data logging** - CSV outputs for all processing stages
+1. **Real-Time Prototype Monitoring System** - Acquires live ECG data directly from the AD8232 sensor via ESP32
+2. **Validation & Testing Framework** - Processes pre-recorded ECG datasets (PhysioNet clinical data* or previously collected AD8232 recordings)
+ 
 
-### Hardware Testing
-- **Hardware-in-the-loop** - Test firmware with real physiological data collected under various test conditions (rest, movement, post-exercise)
-- **Heart rate monitoring** - Instantaneous and windowed BPM calculation
-- **Automated comparison** - Validation of results of batch-processed data vs. data processed in real-time
+#### Both systems implement the following key features, unless otherwise specified:
+
+#### **Signal Processing & Analysis:**
+- **Pan-Tompkins R-peak detection** - Calculation method for R-peak detection
+- **Heart rate monitoring** - Real-time instantaneous and windowed BPM calculation
+- **Automated firmware generation** - Dynamic creation and flashing of ESP32 firmware with embedded datasets (validation framework only)
+
+#### **Data Transport & Communication:**
+- **Dual transport methods** - Streaming via both USB/UART (wired) and BLE (wireless) 
+- **Real-time visualization** - Live ECG plotting with PyQt5/pyqtgraph during data acquisition
+
+#### **Data Validation:**
+- **Multi-method comparison** - Compares R-peaks and BPM from:
+  - Ground-truth annotations (PhysioNet only)
+  - Batch-processed data (software-only, full dataset)
+  - Real-time processed data (hardware-in-the-loop validation)
+- **Automated validation plots** - Overlays graphs of ECG signals with color-coded R-peaks and BPM trends
+- **Data logging** - Outputs CSVs for all processing stages with metadata tracking
+
+### **Hardware Testing Capabilities:**
+- **Physiological condition testing** - Collect and validate data under various states (rest, walking, jogging, post-exercise)
+- **Hardware-in-the-loop validation** - Tests complete signal chain (sensor → MCU → streaming → analysis (prototype monitoring system only))
 
 
 *Note: PhysioNet ECG datasets include a source of ground-truth annotations, which are parsed and included in post-processing analysis of ECG data. Datasets collected with the AD8232-ESP32 module do not have this annotation. Further details about development approach and data validation processes are included in the [**Validation Guide**](docs/VALIDATION.md) section of the repository. 
 
 
-**Work in progress:** I am now working on transitioning to wireless data transmission and battery power for the system. The elimination of cable usage will increase portability and allow me to flexibly collect ECG datasets under various physiological conditions (rest, movement, post-exercise), which can then be used to further optimize the beat-detection algorithm (i.e. enhancing filtering, drift detection, specifically tailored to data collected from the AD8232 AFE). 
+**Work in progress:** I am now working on implementing design changes (across hardware, firmware, and software) to the prototype monitoring system to reduce signal noise in AFE-collected data (which is particulary noticeable during movement). I am currently using a 5V-USB battery pack to power the system, but will soon integrate a Lithium battery source into the system. Updates to the system will be logged in [CHANGELOG.MD](#changelog.md).
 
 ---
-
 
 
 ## Documentation
@@ -72,6 +88,8 @@ Currently, this repository contains a **validation and testing framework** for E
 ### Development
 - [Development Roadmap](docs/ROADMAP.md) - Planned features and milestones
 
+### Change Log
+- [Change Log](CHANGELOG.md) - Changes made to system
 ---
 
 ## Disclaimer
