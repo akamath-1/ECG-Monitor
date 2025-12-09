@@ -7,7 +7,7 @@ Detailed explanation of the ECG validation workflows and comparison methods.
 ## Table of Contents
 
 - [Overview](#overview)
-- [Usage] (#usage)
+- [Usage](#usage)
 - [PhysioNet Validation Workflow](#physionet-validation-workflow)
 - [AD8232 Hardware Validation Workflow](#ad8232-hardware-validation-workflow)
 - [Comparison Methods](#comparison-methods)
