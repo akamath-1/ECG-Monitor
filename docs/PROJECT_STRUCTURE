@@ -7,15 +7,27 @@ ECG-Monitor/
 │   │   ├── signal_processing.py       # R-peak detector, BPM calculator
 │   │   ├── data_handling.py           # Packet parser
 │   │   └── logging.py                 # CSV logger
-│   ├── pipeline/                      # Validation pipelines
+│   ├── hardware/                      # AD8232 data collection scripts
+│   │   ├── collect_ad8232_data_usb.py
+│   │   └── collect_ad8232_data_ble.py
+│   ├── pre_recorded_testing_pipeline/ # Pre-recorded data validation pipelines
 │   │   ├── master_controller_physionet.py
 │   │   ├── master_controller_ad8232.py
 │   │   ├── step1_generate_dataset_physionet.py
 │   │   ├── step1_generate_dataset_ad8232.py
-│   │   ├── step2_flash_firmware.py
+│   │   ├── step2_flash_firmware_usb.py
+│   │   ├── step2_flash_firmware_ble.py
 │   │   ├── step3_batchprocess.py
-│   │   ├── step4_stream.py
-│   │   └── hardware/                  # AD8232 data collection
+│   │   ├── step4_stream_usb.py
+│   │   ├── step4_stream_ble.py
+│   │   ├── step5_analyze_data.py
+│   │   └── config.py
+│   ├── real_time_testing_pipeline/    # Real-time data acquisition pipeline
+│   │   ├── stream_and_analyze_ecg_realtime.py
+│   │   ├── step1_flash_firmware_realtime.py
+│   │   ├── step2_stream_ble_realtime.py
+│   │   ├── step3_batchprocess_ecg_realtime.py
+│   │   └── config.py
 │   ├── tests/                         # Test scripts
 │   │   └── ble/                       # BLE connectivity tests
 │   │       ├── ble_config.py          # BLE UUIDs and configuration
@@ -24,13 +36,37 @@ ECG-Monitor/
 │   │       └── test_ble_streaming.py  # Stream mode test
 │   └── validation/                    # Comparison tools
 │       ├── compare_rpeak_bpm_physionet.py
-│       └── compare_rpeak_bpm_ad8232.py
+│       ├── compare_rpeak_bpm_ad8232.py
+│       └── compare_rpeak_bpm_ad8232_livestreamed.py
 ├── firmware/
-│   └── gateway/                       # ESP32 firmware
+│   ├── gateway/                       # ESP32 firmware
+│   │   ├── ad8232 data collection/    # Hardware data collection firmware
+│   │   │   ├── stream_ad8232_data_usb.ino
+│   │   │   └── stream_ad8232_data_ble.ino
+│   │   ├── real_time_streaming_ble/   # Real-time acquisition firmware
+│   │   │   └── real_time_streaming_ble.ino
+│   │   ├── gateway_template.ino       # USB firmware template
+│   │   └── gateway_template_ble_version.ino  # BLE firmware template
+│   └── signal generator/              # DAC-to-ADC testing firmware
+├── datasets/                          # ECG data storage
+│   ├── PhysioNet Datasets/            # Clinical datasets with annotations
+│   └── AD8232 Data/                   # Hardware-collected datasets
+├── data_logs/                         # Pipeline output files
+│   ├── PhysioNet/                     # PhysioNet validation results
+│   ├── AD8232/                        # AD8232 validation results
+│   └── ECG Real-Time/                 # Real-time acquisition results
 ├── docs/                              # Documentation
-├── datasets/                          # ECG data
-├── data_logs/                         # Output files
-└── heartrate_config.json              # Configuration
+│   ├── DOCUMENTATION_INDEX.md
+│   ├── INSTALLATION.md
+│   ├── USAGE.md
+│   ├── VALIDATION.md
+│   ├── OUTPUT_FILES.md
+│   ├── ROADMAP.md
+│   └── PROJECT_STRUCTURE.md
+├── heartrate_config.json              # Global configuration
+├── requirements.txt                   # Python dependencies
+├── README.md                          # Project documentation
+└── CHANGELOG.md                       # Version history
 ```
 
 ---
