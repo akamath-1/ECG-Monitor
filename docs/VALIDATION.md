@@ -7,6 +7,7 @@ Detailed explanation of the ECG validation workflows and comparison methods.
 ## Table of Contents
 
 - [Overview](#overview)
+- [Usage] (#usage)
 - [PhysioNet Validation Workflow](#physionet-validation-workflow)
 - [AD8232 Hardware Validation Workflow](#ad8232-hardware-validation-workflow)
 - [Comparison Methods](#comparison-methods)
@@ -17,6 +18,19 @@ Detailed explanation of the ECG validation workflows and comparison methods.
 ## Overview
 
 This validation framework provides automated pipelines for testing R-peak detection and BPM calculation algorithms. It is designed to support iterative algorithm development by enabling quick validation cycles as new detection methods and improvements are added.
+
+## Usage
+
+**Communication Protocols**:
+As of 12/7/25, both validation workflows (PhysioNet and AD8232) support testing over two communication interfaces:
+
+USB/UART – Wired serial connection 
+BLE – Wireless link for testing under motion and portable conditions
+
+Supporting both protocols enables validation under both bench-top testing (USB/UART) and real-world movement scenarios (BLE: standing, walking, jogging). 
+
+**Running the Pipeline**:
+The files for these pipelines are located in ECG-Monitor/python/pre_recorded_testing_pipeline. Details for usage are included in [Usage Guide](USAGE.md). 
 
 **Development approach:** Initial algorithm development and testing was performed using pre-recorded PhysioNet datasets, which provided access to diverse test subjects, heart rate conditions, and ground-truth annotations for validation. Once the core algorithm was established, development transitioned to testing with AD8232-collected data for more targeted optimization. Testing with data from the target hardware ensures the algorithm is robust under actual deployment conditions, accounting for hardware-specific characteristics like analog filtering, gain settings, and real-world noise that differ from clinical equipment.
 
