@@ -32,15 +32,6 @@ STREAM_SCRIPT = os.path.join(os.path.dirname(__file__), "step2_stream_ble_realti
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 
-# OUTPUT DIRECTORY FOR THIS RUN:
-output_dir = os.path.join(
-    project_root, "data_logs", "ECG Real-Time", data_file_name_base
-)
-os.makedirs(output_dir, exist_ok=True)
-
-print(f"Output directory for data logs: {output_dir}")
-
-
 def collect_user_inputs():
 
     # Collect and validate user inputs for file name and testing duration.
@@ -231,6 +222,13 @@ def run_full_pipeline():
     user_dictated_file_name, user_dictated_duration, data_file_name_base, output_dir = (
         collect_user_inputs()
     )
+    # OUTPUT DIRECTORY FOR THIS RUN:
+    output_dir = os.path.join(
+        project_root, "data_logs", "ECG Real-Time", data_file_name_base
+    )
+    os.makedirs(output_dir, exist_ok=True)
+
+    print(f"Output directory for data logs: {output_dir}")
 
     # ask user to whether or not to flash firmware to ESP32 - step can be skipped if firmware is already uploaded to ESP32
     flash_firmware_yn = (
